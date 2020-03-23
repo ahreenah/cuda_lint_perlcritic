@@ -1,5 +1,5 @@
 [info]
-title=Linter for Go, using gometalint
-desc=Linter for CudaLint, adds support for Go lexer, using gometalint tool
+title=Linter for Perl, using perlcritic
+desc=Linter for CudaLint, adds support for Perl lexer, using perlcritic tool
 type=cudatext-plugin
-subdir=cuda_lint_gometalint
+subdir=cuda_lint_perlcritic
