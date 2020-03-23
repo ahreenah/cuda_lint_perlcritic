@@ -9,68 +9,81 @@ import tempfile
 
 from cuda_lint import Linter, util, options
 
-class GometaLint(Linter):
+def sl3_util_climb(start_dir, limit=None):
+    """
+    Generate directories, starting from start_dir.
+    If limit is None, stop at the root directory.
+    Otherwise return a maximum of limit directories.
+    """
+    right = True
+
+    while right and (limit is None or limit > 0):
+        yield start_dir
+        start_dir, right = os.path.split(start_dir)
+
+        if limit is not None:
+            limit -= 1
+
+
+def sl3_util_find_file(start_dir, name, parent=False, limit=None, aux_dirs=[]):
+    """
+    Find the given file by searching up the file hierarchy from start_dir.
+    If the file is found and parent is False, returns the path to the file.
+    If parent is True the path to the file's parent directory is returned.
+    If limit is None, the search will continue up to the root directory.
+    Otherwise a maximum of limit directories will be checked.
+    If aux_dirs is not empty and the file hierarchy search failed,
+    those directories are also checked.
+    """
+    for d in sl3_util_climb(start_dir, limit=limit):
+        target = os.path.join(d, name)
+
+        if os.path.exists(target):
+            if parent:
+                return d
+
+            return target
+
+    for d in aux_dirs:
+        d = os.path.expanduser(d)
+        target = os.path.join(d, name)
+
+        if os.path.exists(target):
+            if parent:
+                return d
+
+            return target
+
+#-----------------------------------------------------------------------------
+
+class PerlCritic(Linter):
     
-    cmd = 'gometalinter --fast .'
-    regex = r'(?:[^:]+):(?P<line>\d+):(?P<col>\d+)?:(?:(?P<warning>warning)|(?P<error>error)):\s*(?P<message>.*)'
-    error_stream = util.STREAM_BOTH
-    syntax = ('Go')
-    default_type = options.KIND_ERROR
+    cmd = 'perl /Users/alme/Downloads/Perl-Critic-1.138\ 2/bin/perlcritic '
+    syntax = ('Perl')
     defaults = {
-        'selector': 'source.go'
+        'selector': 'source.modernperl, source.perl'
     }
 
-    def run(self, cmd, code):
-        return self._live_lint(cmd, code)
-
-    def _live_lint(self, cmd, code):
-        dir = os.path.dirname(self.filename)
-        if not dir:
-            print('gometalinter: skipped linting of unsaved file')
-            return
-        filename = os.path.basename(self.filename)
-        cmd = cmd + ['-I', '^'+filename]
-        print('gometalinter: live linting {} in {}: {}'.format(filename, dir, ' '.join(map(shlex.quote, cmd))))
-        files = [f for f in os.listdir(dir) if f.endswith('.go')]
-        if len(files) > 40:
-            print("gometalinter: too many files ({}), live linting skipped".format(len(files)))
-            return ''
-        return self.tmpdir(cmd, dir, files, self.filename, code)
-
-    def _in_place_lint(self, cmd):
-        dir = os.path.dirname(self.filename)
-        if not dir:
-            print('gometalinter: skipped linting of unsaved file')
-            return
-        filename = os.path.basename(self.filename)
-        cmd = cmd + ['-I', '^'+filename]
-        print('gometalinter: in-place linting {}: {}'.format(filename, ' '.join(map(shlex.quote, cmd))))
-        out = self.communicate(cmd)
-        return out or ''
-
-    def tmpdir(self, cmd, dir, files, filename, code):
-        """Run an external executable using a temp dir filled with files and return its output."""
-        with tempfile.TemporaryDirectory(dir=dir, prefix=".gometalinter-") as tmpdir:
-            for f in files:
-                target = os.path.join(tmpdir, f)
-                f = os.path.join(dir, f)
-
-                if os.path.basename(target) == os.path.basename(filename):
-                    # source file hasn't been saved since change, so update it from our live buffer
-                    with open(target, 'wb') as f:
-                        if isinstance(code, str):
-                            code = code.encode('utf8')
-
-                        f.write(code)
-                else:
-                    os.link(f, target)
-
-            out = self.communicate(cmd)
-        return out or ''
-        '''
     
-    syntax = ('HTML', 'HTML_','Go')
-    cmd = (_exe, '-errors', '-quiet', '-utf8')
+    #-----------
+    
+    """Provides an interface to perlcritic."""
 
-    regex = r'^line (?P<line>\d+) column (?P<col>\d+) - (?:(?P<error>Error)|(?P<warning>Warning)): (?P<message>.+)'
-    error_stream = util.STREAM_STDERR'''
+    executable = 'perl'
+    regex = r'\[.+\] (?P<message>.+?) at line (?P<line>\d+), column (?P<col>\d+).+?'
+
+    
+
+    def cmd(self):
+        """Return a tuple with the command line to execute."""
+
+        command = [self.executable, '/Users/alme/Downloads/Perl-Critic-1.138\ 2/bin/perlcritic', '--verbose', '8']
+
+        #config = sl3_util_find_file(
+            #os.path.dirname(self.filename), '.perlcriticrc'
+        #)
+
+        #if config:
+            #command += ['-p', config]
+
+        return command
