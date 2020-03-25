@@ -2,6 +2,8 @@
 # Change for CudaLint: Medvosa
 # License: MIT
 
+CMD = 'perl /Users/alme/Downloads/Perl-Critic-1.138\ 2/bin/perlcritic '
+
 import os
 
 import shlex
@@ -57,12 +59,12 @@ def sl3_util_find_file(start_dir, name, parent=False, limit=None, aux_dirs=[]):
 #-----------------------------------------------------------------------------
 
 class PerlCritic(Linter):
-    
-    cmd = 'perl /Users/alme/Downloads/Perl-Critic-1.138\ 2/bin/perlcritic '
+    cmd = CMD
     syntax = ('Perl')
     defaults = {
         'selector': 'source.modernperl, source.perl'
     }
+    
 
     
     #-----------
