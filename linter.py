@@ -1,5 +1,5 @@
-# Copyright (c) 2013 Aparajita Fishman
-# Change for CudaLint: Alexey T.
+# Copyright (c) 2018 Gregory Oschwald
+# Change for CudaLint: Medvosa
 # License: MIT
 
 import os
@@ -78,12 +78,5 @@ class PerlCritic(Linter):
         """Return a tuple with the command line to execute."""
 
         command = [self.executable, '/Users/alme/Downloads/Perl-Critic-1.138\ 2/bin/perlcritic', '--verbose', '8']
-
-        #config = sl3_util_find_file(
-            #os.path.dirname(self.filename), '.perlcriticrc'
-        #)
-
-        #if config:
-            #command += ['-p', config]
 
         return command
